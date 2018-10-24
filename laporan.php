@@ -23,9 +23,12 @@ class PDF extends FPDF{
 
     $data = array();
 
-    $sql = "select * from kegiatan where nidn = ".$_SESSION['admin']."";
+    $sql = "select *, dosen.nama_dosen from kegiatan 
+            INNER JOIN dosen ON kegiatan.nidn = dosen.nidn 
+            where nidn = ".$_SESSION['admin']."";
     if($_SESSION['admin'] == '0414106701'){
-      $sql = "select * from kegiatan";
+      $sql = "select *, dosen.nama_dosen from kegiatan 
+              INNER JOIN dosen ON kegiatan.nidn = dosen.nidn ";
     }
 
     $query = mysqli_query($con, $sql);
@@ -33,7 +36,7 @@ class PDF extends FPDF{
     if ($query) {
 
       while ($d = mysqli_fetch_array($query)) {
-        $r = $nomer . ";" . $d['nama_kegiatan'] . ";" . $d['tanggal'] . ";" . $d['lokasi'] . ";" . $d['asal_dana'] . ";" . $d['keterangan'];
+        $r = $nomer . ";" . $d['nidn'] . ";" . $d['nama_dosen'] . ";" . $d['nama_kegiatan'] . ";" . $d['tanggal'] . ";" . $d['lokasi'] . ";" . $d['asal_dana'] . ";" . $d['keterangan'];
         $data[] = explode(';',$r);
         $nomer++;
       }
@@ -51,10 +54,11 @@ class PDF extends FPDF{
       $this->SetDrawColor(228, 233, 237);
       $this->SetLineWidth(.3);
       $this->SetFont('','B');
+      $this->Cell(1);
       // Header
-      $w = array(20, 80, 40, 45, 45, 45);
+      $w = array(7, 25, 55, 50, 20, 45, 35, 45);
       for($i=0;$i<count($header);$i++)
-          $this->Cell($w[$i],7,$header[$i],1,0,'C',true);
+          $this->Cell($w[$i],7,$header[$i], 1 ,0,'C',true);
       $this->Ln();
       // Color and font restoration
       $this->SetFillColor(224,235,255);
@@ -69,7 +73,9 @@ class PDF extends FPDF{
           $this->Cell($w[2],6,$row[2],'LR',0,'L',$fill);
           $this->Cell($w[3],6,$row[3],'LR',0,'L',$fill);
           $this->Cell($w[4],6,$row[4],'LR',0,'L',$fill);
-          $this->MultiCell( $w[5], 6, $row[5],'LR', 'L', $fill);
+          $this->Cell($w[5],6,$row[5],'LR',0,'L',$fill);
+          $this->Cell($w[6],6,$row[6],'LR',0,'L',$fill);
+          $this->MultiCell( $w[7], 6, $row[7],'LR', 'L', $fill);
           $fill = !$fill;
       }
       // Closing line
@@ -79,11 +85,11 @@ class PDF extends FPDF{
 
 $pdf = new PDF();
 // Column headings
-$header = array('No', 'Nama Kegiatan', 'Tanggal', 'Alamat Kegiatan', 'Asal Dana', 'Keterangan');
+$header = array('No', 'NIDN', 'Nama Dosen', 'Nama Kegiatan', 'Tanggal', 'Alamat Kegiatan', 'Asal Dana', 'Keterangan');
 // Data loading
 $data = $pdf->LoadData();
 
-$pdf->SetFont('Arial','',14);
+$pdf->SetFont('Arial','',9);
 $pdf->AddPage('L', 'A4');
 $pdf->FancyTable($header,$data);
 $pdf->Output('I', 'Laporan-Kegiatan.pdf');
